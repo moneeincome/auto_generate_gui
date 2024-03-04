@@ -6,7 +6,7 @@ from numpy import random
 
 root = tk.Tk()
 root.title("Auto Generate")
-root.geometry("800x600")
+root.geometry("1024x600")
 
 #======================Prompt Area======================
 
@@ -25,7 +25,7 @@ def on_exit(event):
 
 prompt_placeholder = 'Enter your prompt here...'
 
-prompt_frame = tk.Frame(root, width=650, height=400)
+prompt_frame = tk.Frame(root, width=650, height=590)
 prompt_frame.pack_propagate(False)
 prompt_frame.place(x=10, y=10)
 
@@ -40,9 +40,9 @@ prompt_text.pack(fill=tk.BOTH, expand=True)
 prompt_text.bind("<FocusIn>", on_entry)
 prompt_text.bind("<FocusOut>", on_exit)
 
-prompt_scrollbar = tk.Scrollbar(prompt_frame, command=prompt_text.yview)
-prompt_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-prompt_text.config(yscrollcommand=prompt_scrollbar.set)
+prompt_scrollbar_v = tk.Scrollbar(prompt_frame, command=prompt_text.yview, width=10)
+prompt_scrollbar_v.pack(side=tk.RIGHT, fill=tk.Y)
+prompt_text.config(yscrollcommand=prompt_scrollbar_v.set)
 
 prompt_text.bind("<MouseWheel>", on_text_area_scroll)
 
@@ -50,7 +50,7 @@ prompt_text.bind("<MouseWheel>", on_text_area_scroll)
 
 #Aspect Ratio
 
-setting_frame = tk.Frame(root, width=150, height=400)
+setting_frame = tk.Frame(root, width=364, height=400)
 setting_frame.pack_propagate(False)
 setting_frame.place(x=665, y=10)
 
@@ -77,26 +77,34 @@ for i, ratio in enumerate(aspect_ratios):
 
 #Suffix
 
-def on_focus_in(event):
-  if suffix.get() == placeholder:
-    suffix.delete(0, tk.END)
-    suffix.config(fg="black")
+def on_focus_in(event, entry):
+    if entry.get() == placeholder:
+      entry.delete(0, tk.END)
+      entry.config(fg="black")
 
-def on_focus_out(event):
-  if suffix.get() == "":
-    suffix.insert(0, placeholder)
-    suffix.config(fg="grey")
+def on_focus_out(event, entry):
+  if entry.get() == "":
+    entry.insert(0, placeholder)
+    entry.config(fg="grey")
 
 placeholder = "Enter suffix here"
 
 suffix_label = tk.Label(setting_frame, text="Suffix")
 suffix_label.pack(anchor=tk.NW)
 
-suffix = tk.Entry(setting_frame, fg="grey")
-suffix.insert(0, placeholder)
-suffix.bind("<FocusIn>", on_focus_in)
-suffix.bind("<FocusOut>", on_focus_out)
-suffix.pack(side=tk.TOP, anchor=tk.NW)
+suffix_frame = tk.Frame(setting_frame)
+suffix_frame.pack(side=tk.TOP, anchor=tk.NW)
+
+suffixs = []
+
+# Create and place the entry widgets inside the frame
+for i in range(10):
+  suffix = tk.Entry(suffix_frame, fg="grey", width=27)
+  suffix.insert(0, placeholder)
+  suffix.bind("<FocusIn>", lambda event, entry=suffix: on_focus_in(event, entry))
+  suffix.bind("<FocusOut>", lambda event, entry=suffix: on_focus_out(event, entry))
+  suffix.grid(row=i//2, column=i%2, padx=5, pady=5, sticky="w")
+  suffixs.append(suffix)
 
 #Confirm Button
 
@@ -115,10 +123,15 @@ def on_generate():
   )
 
   #Add suffix to prompt's line
-  if suffix.get() != placeholder and suffix.get() != '':
+  suffix_list = []
+  for suffix in suffixs:
+    if suffix.get() != placeholder and suffix.get() != '':
+      suffix_list.append(suffix.get())
+
+  if len(suffix_list) > 0:
     raw_prompt = os.linesep.join(
       [
-        line.strip() + f' {suffix.get()}' for line in raw_prompt.splitlines()
+        line.strip() + f' {suffix_list[random.randint(len(suffix_list))]}' for line in raw_prompt.splitlines()
         if line
       ]
     )
