@@ -3,15 +3,20 @@ from tkinter import messagebox
 from PIL import Image, ImageTk
 import os
 from numpy import random
+from tkinter import scrolledtext
 
 root = tk.Tk()
 root.title("Auto Generate")
-root.geometry("1024x600")
+root.geometry("1280x445")
+
+# Disable window resizing
+root.resizable(False, False)
 
 #======================Prompt Area======================
 
-def on_text_area_scroll(event):
-  prompt_text.yview_scroll(int(-1 * (event.delta / 120)), "units")
+def on_scroll(*args):
+  prompt_text.yview(*args)
+  prompt_text.xview(*args)
 
 def on_entry(event):
   if prompt_text.get("1.0", "end-1c") == prompt_placeholder:
@@ -25,9 +30,9 @@ def on_exit(event):
 
 prompt_placeholder = 'Enter your prompt here...'
 
-prompt_frame = tk.Frame(root, width=650, height=590)
-prompt_frame.pack_propagate(False)
-prompt_frame.place(x=10, y=10)
+prompt_frame = tk.Frame(root, width=650, height=445)
+#prompt_frame.pack_propagate(False)
+prompt_frame.pack(anchor=tk.NW, padx=10, ipady=10, expand=True)
 
 prompt_label = tk.Label(prompt_frame, text="Prompt")
 prompt_label.pack(anchor=tk.NW)
@@ -35,30 +40,34 @@ prompt_label.pack(anchor=tk.NW)
 prompt_text = tk.Text(prompt_frame, wrap="none")
 prompt_text.insert("1.0", prompt_placeholder, 'placeholder')
 prompt_text.tag_configure('placeholder', foreground='gray')
-prompt_text.pack(fill=tk.BOTH, expand=True)
+prompt_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
 prompt_text.bind("<FocusIn>", on_entry)
 prompt_text.bind("<FocusOut>", on_exit)
 
-prompt_scrollbar_v = tk.Scrollbar(prompt_frame, command=prompt_text.yview, width=10)
+prompt_scrollbar_v = tk.Scrollbar(prompt_frame, command=prompt_text.yview)
 prompt_scrollbar_v.pack(side=tk.RIGHT, fill=tk.Y)
 prompt_text.config(yscrollcommand=prompt_scrollbar_v.set)
 
-prompt_text.bind("<MouseWheel>", on_text_area_scroll)
+prompt_scrollbar_h = tk.Scrollbar(root, orient=tk.HORIZONTAL, command=prompt_text.xview)
+prompt_scrollbar_h.pack(side=tk.BOTTOM, anchor=tk.SW, ipadx=300, padx=5)
+prompt_text.config(xscrollcommand=prompt_scrollbar_h.set)
+
+prompt_text.bind("<Configure>", on_scroll)
 
 #======================Setting Area======================
 
 #Aspect Ratio
 
-setting_frame = tk.Frame(root, width=364, height=400)
-setting_frame.pack_propagate(False)
-setting_frame.place(x=665, y=10)
+setting_frame = tk.Frame(root, width=610, height=400)
+#setting_frame.pack_propagate(False)
+setting_frame.place(x=675, y=10)
 
 ar_label = tk.Label(setting_frame, text="Aspect ratio")
 ar_label.pack(anchor=tk.NW)
 
 ar_frame = tk.Frame(setting_frame)
-ar_frame.pack(side=tk.TOP, anchor=tk.NW)
+ar_frame.pack(side=tk.TOP, anchor=tk.NW, pady=5)
 
 aspect_ratios = ["1:1", "3:2", "2:3", "4:3", "3:4", "5:4", "4:5", "7:2", "2:7", "16:9", "9:16", "21:9", "9:21"]
 ar_vars = []
@@ -90,7 +99,7 @@ def on_focus_out(event, entry):
 placeholder = "Enter suffix here"
 
 suffix_label = tk.Label(setting_frame, text="Suffix")
-suffix_label.pack(anchor=tk.NW)
+suffix_label.pack(anchor=tk.NW, pady=5)
 
 suffix_frame = tk.Frame(setting_frame)
 suffix_frame.pack(side=tk.TOP, anchor=tk.NW)
@@ -99,7 +108,7 @@ suffixs = []
 
 # Create and place the entry widgets inside the frame
 for i in range(10):
-  suffix = tk.Entry(suffix_frame, fg="grey", width=27)
+  suffix = tk.Entry(suffix_frame, fg="grey", width=48)
   suffix.insert(0, placeholder)
   suffix.bind("<FocusIn>", lambda event, entry=suffix: on_focus_in(event, entry))
   suffix.bind("<FocusOut>", lambda event, entry=suffix: on_focus_out(event, entry))
@@ -131,7 +140,7 @@ def on_generate():
   if len(suffix_list) > 0:
     raw_prompt = os.linesep.join(
       [
-        line.strip() + f' {suffix_list[random.randint(len(suffix_list))]}' for line in raw_prompt.splitlines()
+        line.strip() + f', {suffix_list[random.randint(len(suffix_list))]}' for line in raw_prompt.splitlines()
         if line
       ]
     )
@@ -152,8 +161,8 @@ def on_generate():
   
   print(raw_prompt)
 
-generate_button = tk.Button(setting_frame, text="Generate", width=17, height=4, command=on_generate)
-generate_button.pack(side=tk.TOP, anchor=tk.NW, pady=10)  # Adjust position as needed
+generate_button = tk.Button(setting_frame, text="Generate", width=84, height=2, command=on_generate)
+generate_button.pack(side=tk.TOP, anchor=tk.NW, pady=5)  # Adjust position as needed
 
 #======================Event update progression======================
 
