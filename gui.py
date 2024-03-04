@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 from PIL import Image, ImageTk
 import os
+from numpy import random
 
 root = tk.Tk()
 root.title("Auto Generate")
@@ -56,42 +57,23 @@ setting_frame.place(x=665, y=10)
 ar_label = tk.Label(setting_frame, text="Aspect ratio")
 ar_label.pack(anchor=tk.NW)
 
-ar_var = tk.StringVar()
+ar_frame = tk.Frame(setting_frame)
+ar_frame.pack(side=tk.TOP, anchor=tk.NW)
 
-ar_none = tk.Radiobutton(setting_frame, text="None", variable=ar_var, value="None")
-ar_none.pack(side=tk.TOP, anchor=tk.NW)
+aspect_ratios = ["1:1", "3:2", "2:3", "4:3", "3:4", "5:4", "4:5", "7:2", "2:7", "16:9", "9:16", "21:9", "9:21"]
+ar_vars = []
 
-ar_1_1 = tk.Radiobutton(setting_frame, text="1:1", variable=ar_var, value="1:1")
-ar_1_1.pack(side=tk.TOP, anchor=tk.NW)
+ar_1_1var = tk.IntVar()
+ar_vars.append(ar_1_1var)
+ar_1_1 = tk.Checkbutton(ar_frame, text=aspect_ratios[0], variable=ar_1_1var, onvalue=1, offvalue=0)
+ar_1_1.grid(row=0//2, column=0%2, sticky="w")
 
-ar_3_2 = tk.Radiobutton(setting_frame, text="3:2", variable=ar_var, value="3:2")
-ar_3_2.pack(side=tk.TOP, anchor=tk.NW)
-
-ar_4_3 = tk.Radiobutton(setting_frame, text="4:3", variable=ar_var, value="4:3")
-ar_4_3.pack(side=tk.TOP, anchor=tk.NW)
-
-ar_16_9 = tk.Radiobutton(setting_frame, text="16:9", variable=ar_var, value="16:9")
-ar_16_9.pack(side=tk.TOP, anchor=tk.NW)
-
-ar_21_9 = tk.Radiobutton(setting_frame, text="21:9", variable=ar_var, value="21:9")
-ar_21_9.pack(side=tk.TOP, anchor=tk.NW)
-
-ar_none.select()
-
-# orientation
-
-or_label = tk.Label(setting_frame, text="Orientation")
-or_label.pack(anchor=tk.NW)
-
-or_var = tk.StringVar()
-
-or_horizontal = tk.Radiobutton(setting_frame, text="Horizontal", variable=or_var, value="Horizontal")
-or_horizontal.pack(side=tk.TOP, anchor=tk.NW)
-
-or_vertical = tk.Radiobutton(setting_frame, text="Vertical", variable=or_var, value="Vertical")
-or_vertical.pack(side=tk.TOP, anchor=tk.NW)
-
-or_horizontal.select()
+for i, ratio in enumerate(aspect_ratios):
+  if i == 0: continue
+  var = tk.IntVar()
+  ar_vars.append(var)
+  checkbox = tk.Checkbutton(ar_frame, text=ratio, variable=var, onvalue=1, offvalue=0)
+  checkbox.grid(row=(i+1)//2, column=(i+1)%2, sticky="w")
 
 #Suffix
 
@@ -142,14 +124,15 @@ def on_generate():
     )
 
   #Add aspect ratio to prompt's line
-  if ar_var.get() != 'None':
-    aspect_ratio = ar_var.get()
-    if or_var.get() == 'Vertical':
-      raw_aspect_ratio = ar_var.get().split(':')
-      aspect_ratio = raw_aspect_ratio[1] + ':' + raw_aspect_ratio[0]
+  ar_list = []
+  for i, ratio in enumerate(aspect_ratios):
+    if ar_vars[i].get() == 1:
+      ar_list.append(ratio)
+
+  if len(ar_list) > 0:
     raw_prompt = os.linesep.join(
       [
-        line.strip() + f' --ar {aspect_ratio}' for line in raw_prompt.splitlines()
+        line.strip() + f' --ar {ar_list[random.randint(len(ar_list))]}' for line in raw_prompt.splitlines()
         if line
       ]
     )
